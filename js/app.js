@@ -1,8 +1,7 @@
-console.log('start');
 
 if (navigator.serviceWorker){
-    console.log('supported');
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.register('/sw.js')
+        .then( () => { console.log('SW: registered')});
 }
 
 

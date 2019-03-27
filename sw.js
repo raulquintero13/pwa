@@ -6,7 +6,6 @@ const CACHE_INMUTABLE_NAME = "inmutable-v1";
 const CACHE_DYNAMIC_NAME = "dynamic-v1";
 const OFFLINE_ICON = "/img/offlineIco.png";
 
-
 self.addEventListener('install', e => {
 
     const cacheProm = caches.open(CACHE_STATIC_NAME)
@@ -15,12 +14,12 @@ self.addEventListener('install', e => {
             return cache.addAll([
                 '/',
                 '/index.html',
+                '/aboutus.html',
+                '/pages/offline.html',
                 '/style.css',
-                '/img/main.jpg',
                 '/js/app.js',
-                '/img/offlineico.png',
-                '/img/onlineico.png',
-                '/aboutus.html'
+                '/img/poster.jpg',
+                '/img/no-img.jpg',
             ]);
         });
 
@@ -35,75 +34,57 @@ self.addEventListener('install', e => {
         });
 
     e.waitUntil(Promise.all([cacheProm, cacheInmutable]));
-
-
 })
-
 
 self.addEventListener('activate', e => {
 
-
     const respuesta = caches.keys().then(keys => {
-
         keys.forEach(key => {
 
-            // static-v4
             if (key !== CACHE_STATIC_NAME && key.includes('static')) {
                 return caches.delete(key);
             }
-
         });
-
     });
-
-
-
     e.waitUntil(respuesta);
-
 });
 
 self.addEventListener('fetch', e => {
-
-
    
     const respuesta = new Promise( (resolve, reject) =>{
-
         let rechazada = false;
-
         const falloUnaVez = () => {
 
             if ( rechazada ) {
                 
                 if ( /\.(png|jpg)$/i.test( e.request.url ) ) {
-
+                    console.log('reemplazar imagen')
                     resolve( caches.match('/img/no-img.jpg')  );
 
                 } else { 
+                    console.log('reject: no se encontro respuesta');
                     reject('No se encontro respuesta');
                 }
-
 
             } else {
                 rechazada = true;
             }
-
-
         };
-
-
 
         fetch( e.request ).then( res => {
             res.ok ? resolve(res) : falloUnaVez();
-        }).catch( falloUnaVez );
-
+        }).catch( error => {
+            falloUnaVez() 
+        });
 
         caches.match( e.request ).then( res => {
             res ? resolve( res ) : falloUnaVez();
         }).catch( falloUnaVez );
 
-
+    }).catch( err => {
+        console.log('catch page offline');
+        return caches.match('/pages/offline.html');
     });
-
 
     e.respondWith( respuesta );
 
